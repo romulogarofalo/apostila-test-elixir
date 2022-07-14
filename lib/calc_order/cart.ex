@@ -1,11 +1,12 @@
 defmodule CalcOrder.Cart do
   alias CalcOrder.Product
+  alias CalcOrder.Client
 
   @type t :: %__MODULE__{
-    product: Product.t,
-    amount: integer()
+    products: [Product.t],
+    client: Client.t()
   }
 
-  @enforce_keys [:product, :amount]
-  defstruct [:product, :amount]
+  @enforce_keys [:products, :client]
+  defstruct [:products, :client]
 end

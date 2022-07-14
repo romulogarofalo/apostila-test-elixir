@@ -6,51 +6,104 @@ defmodule CalcOrder.ShipCostTest do
   alias CalcOrder.ShipCost
   alias CalcOrder.Cart
   alias CalcOrder.Product
+  alias CalcOrder.Client
 
-  describe "sum_cart" do
-    test "sum_cart with right params" do
-      carts = [
+  describe "calc_cart_ship" do
+    test "calc_cart_ship with right params" do
+      cart =
         %Cart{
-          product: %Product{
-            name: "banana",
-            value: 10
-          },
-          amount: 4
-        },
-        %Cart{
-          product: %Product{
-            name: "laranja",
-            value: 2
-          },
-          amount: 4
-        },
-        %Cart{
-          product: %Product{
-            name: "morango",
-            value: 20
-          },
-          amount: 4
+          products: [
+            %Product{
+              name: "banana",
+              value: 10,
+              amount: 4
+            },
+            %Product{
+              name: "laranja",
+              value: 2,
+              amount: 4
+            },
+            %Product{
+              name: "morango",
+              value: 20,
+              amount: 2
+            },
+          ],
+          client: %Client{
+            name: "romulo",
+            cep: "11233234"
+          }
         }
-      ]
 
       response_body = %{
         "value" => 20
       }
 
-      expect(TeslaMock, :call, fn %Tesla.Env{
+      expect(Tesla.Mock, :call, fn %Tesla.Env{
         method: :get,
-      } ->
+      } = env, _ ->
         {:ok, %Tesla.Env{env | status: 200, body: response_body}}
       end)
 
-      assert ShipCost.sum_cart(carts) == 148
+      assert ShipCost.calc_cart_ship(cart) ==
+        {:ok, %{ship_cost: 20, total_cart: 88}}
+
     end
 
     test "sum_cart with no products" do
-      assert ShipCost.sum_cart(carts) == 0
+      expect(Tesla.Mock, :call, fn %Tesla.Env{
+          method: :get,
+        } = env, _ ->
+          {:ok, %Tesla.Env{env | status: 200, body: %{
+            "value" => 20
+          }}}
+      end)
+
+      assert ShipCost.calc_cart_ship(%Cart{products: [],
+      client: %Client{
+        name: "romulo",
+        cep: "11233234"
+      }}) == {:ok, %{ship_cost: 20, total_cart: 0}}
     end
 
-    test "sum_cart total lower than 100" do
+    test "sum_cart total bigger than 100" do
+      cart =
+        %Cart{
+          products: [
+            %Product{
+              name: "banana",
+              value: 10,
+              amount: 4
+            },
+            %Product{
+              name: "laranja",
+              value: 2,
+              amount: 4
+            },
+            %Product{
+              name: "morango",
+              value: 20,
+              amount: 4
+            },
+          ],
+          client: %Client{
+            name: "romulo",
+            cep: "11233234"
+          }
+        }
+
+      response_body = %{
+        "value" => 20
+      }
+
+      expect(Tesla.Mock, :call, fn %Tesla.Env{
+        method: :get,
+      } = env, _ ->
+        {:ok, %Tesla.Env{env | status: 200, body: response_body}}
+      end)
+
+      assert ShipCost.calc_cart_ship(cart) ==
+        {:ok, %{ship_cost: 0, total_cart: 128}}
 
     end
   end
