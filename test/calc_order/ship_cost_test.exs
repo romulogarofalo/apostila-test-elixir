@@ -7,6 +7,7 @@ defmodule CalcOrder.ShipCostTest do
   alias CalcOrder.Cart
   alias CalcOrder.Product
   alias CalcOrder.Client
+  alias CalcOrder.CepCostService
 
   describe "calc_cart_ship" do
     test "calc_cart_ship with right params" do
